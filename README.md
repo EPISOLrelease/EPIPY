@@ -11,11 +11,7 @@ For installation with PIP run
 ```
 pip install episol
 ```
-from there we can import the episol module
+epipy is contained within the episol module
 ```
 from episol.epipy import epipy
-```
-or 
-```
-import episol.epipy as ep
 ```
