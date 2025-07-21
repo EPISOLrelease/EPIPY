@@ -1,10 +1,9 @@
-#@title This is the code for the python-Episol interface
 ###########################
 import subprocess
 import os
 import threading
-import pandas as pd
-import matplotlib.pyplot as plt
+#import pandas as pd
+#import matplotlib.pyplot as plt
 
 class epipy:
     def __init__(self,solute_structure,solute_topology,to_gro=False,gen_idc=False,
