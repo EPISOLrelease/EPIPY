@@ -1,4 +1,3 @@
-###########################
 import subprocess
 import os
 import threading
@@ -8,10 +7,24 @@ import threading
 class epipy:
     def __init__(self,solute_structure,solute_topology,to_gro=False,gen_idc=False,
                  convert=False,recenter=False,box_size=[10,10,10]):
-      # moving solute and solvent to __init__ because it seems more natural
-      # user can still overwrite if need be
-      # initialize everything so the user can define the parameters
-      # on their own if need be
+      """
+      EPIPY: Mk.II.beta
+      3DRISM interface ,water placement and data manipulation tool
+      =============================================
+      class is initialized with a solute structure file and its corresponding topology
+      +++++++++++++++++++++++++++++++++++++++++++++
+      solute_structure :: .gro, .pdb or .xtc file
+      solute_topology :: .top or .solte file
+      gen_idc :: bool, generate an ion-dipole-correction (IDC) enabled .solute file
+      this file will be used for the remainder of the calculation
+      convert :: convert solute_topology to .solute file
+      
+      ========== IF GROMACS ====================
+      - requirements: GROMACS installed and properlly sourced
+      to_gro :: convert solute_structure file to .gro using pdb2gmx
+      recenter :: recenter solute incenter of box using gmx -edifconf
+      
+      """
       self.cmd_path = "" #path to eprism command
       self.grid = [] # number of grids per unit cell LxWxH
       self.closure = 'PSE3'
@@ -36,9 +49,9 @@ class epipy:
       # you can do this later onif you want to change files
       self.solute(solute_structure,solute_topology,to_gro=False,gen_idc=False,convert=False,recenter=False,box_size=[10,10,10])
       self.solvent()
-####################################################################################
-# HERE I AM MOVING THIS TO __INIT__
-####################################################################################
+      ####################################################################################
+      # HERE I AM MOVING THIS TO __INIT__
+      ####################################################################################
     def solute(self,solute_structure,solute_topology,to_gro=False,gen_idc=False,convert=False,recenter=False,box_size=[10,10,10]):
         """solute file (solute/top/prmtop, or a folder)"""
         self.structure_file = solute_structure
@@ -53,7 +66,7 @@ class epipy:
         else:
             self.solute_top = solute_topology
         ####################################################################################
-        # THIS IS KIND OF TRASH TO INCLUDE: LET THEM USE GMX ON THEIR OWN IF THEY WANT
+        # GROMACS REQUIRED FOR THESE COMMANDS, may remove later on but can be handy
         ####################################################################################
         if recenter:
             subprocess.run([f"gmx  editconf -f {self.structure_file} -c yes -box {box_size[0]} {box_size[1]} {box_size[2]} -o {self.structure_file[:-4]}.gro"],shell=True)
@@ -64,6 +77,7 @@ class epipy:
         #box = [box_size,box_size,box_size]
         #self.rism_args += f" -f {self.path+self.solute_path+self.structure_file} -s {self.path+self.solute_path+self.solute_top}"
       ####################################################################################
+      # this block reads the structure file and returns the box dimensions
         if f"{self.path+self.solute_path+self.structure_file}"[-3:] == 'pdb':
           self.file_type = 'pdb'
           with open(f"{self.path+self.solute_path+self.structure_file}",'r') as sol:
@@ -90,13 +104,21 @@ class epipy:
         self.solute_box = [float(val) for val in last_line.split()]
 
     def solvent(self,solvent_topology='tip3p-amber14.01A.gaff'):
-        """iet parameter file, can be screen/con"""
+        """
+        Reads the solvent topology file
+        =================================
+        solvent_topology :: correlation file
+        """
         self.solvent_top = solvent_topology
         #self.rism_args += f" -p {self.path+self.solvent_path+self.solvent_top}"
-####################################################################################
-####################################################################################
+        ####################################################################################
+        ####################################################################################
     def rism(self,step=500,resolution=1,args=('all')):
         """
+        Sets the steps and resolution of the calculation.
+        Will automatically set number of grids based on the box dimensions
+        acquired from self.solute()
+        =======================================================
         step :: int(), Number of SCF steps to perform
         resolution :: int(), grid resolution of box (will override if previously set)
         args :: string(), values to save to the dump file; options below:
@@ -125,6 +147,14 @@ class epipy:
         self.save_command = f' save:{args}'
 
     def report(self,out_file_name:str='episol_out',args=('all')):
+        """
+        function specifies the name of the .log file and
+        which params to write out into it
+        file name can be specified with self.log as well
+        ================================================
+        out_file :: name for .log file
+        **args :: command save strings
+        """
         self.log = out_file_name
         cmd_string = " report:"
         for arg in args:
@@ -132,16 +162,28 @@ class epipy:
         self.to_report = f" {cmd_string}" #{self.rism_cmd} {cmd_string}"
 
     def get_version(self):
+        """
+        returns the version by simply calling episol kernel
+        from the command line
+        """
         temp = subprocess.check_output([f'{self.cmd_path}eprism3d --version'],shell=True)
         return ''.join([chr(i) for i in temp[:-1]])
 
     def get_help(self,search_str:str):
+      """
+      searches episol by calling --help from the CLI
+      ==============================================
+      search_str :: string to search for
+      """
+      search_str = search_str.strip()
       xx = subprocess.run(["eprism3d","--h",search_str],capture_output=True)
       xv = ''.join([chr(i) for i in xx.stdout[:-1]])
       print(xv)
 
     def test(self,nt=1,v=1):
         """
+        Calls episol and adds -test flag to the CLI
+        ==========================================
         v :: int(), verbose rating
         nt :: int(), number of threads to use
         """
@@ -205,7 +247,7 @@ class epipy:
         #self.rism_args += f' save:all -nt {nt} -v {v}'
         self.rism_args += f' -nt {nt} -v {v}'
         subprocess.run([f"{self.cmd_path}eprism3d {self.rism_args}"],shell=True)#,self.rism_args],shell=True)
-        self.rism_args = ''
+        self.rism_args = '' # clear vars so we do not overwrite if reinitializing
         with open(f'{self.log}.log','r') as f:
           for line in f:
             tmp = line.split()
@@ -213,18 +255,36 @@ class epipy:
               out = float(tmp[4])
               step = tmp[2]
         f.close()
-        if out > self.err_tol:
-          print(f"Failed to reach desired err_tol of {self.err_tol}")
-          print(f"Actual error: {out}")
-          print(f"Difference: {self.err_tol - out}")
-          print(f"RISM finished at step {step}")
-        else:
-          print(f"Calculation finished in {step} steps ")
-          print(f"err_tol: {self.err_tol} actual: {out} ")
-
+        try:
+            if out > self.err_tol:
+                print(f"Failed to reach desired err_tol of {self.err_tol}")
+                print(f"Actual error: {out}")
+                print(f"Difference: {self.err_tol - out}")
+                print(f"RISM finished at step {step}")
+            else:
+                print(f"Calculation finished in {step} steps ")
+                print(f"err_tol: {self.err_tol} actual: {out} ")
+        except UnboundLocalError:
+            with open(f'{self.log}.log','r') as rr:
+                tmp_err_hold = r.read()
+            r.close
+            print("It appears your calculation has encountered an error")
+            print(f"Please see the output from the log file ({self.log}.log)")
+            print(tmp_err_hold)
+        return
+    
     def dump(self,file_name='',out_name=False,list_values=False,value_to_extract=1):
+        """
+        Extracts the compressed .ts4s file and writes to a txt file
+        ==================================
+        file_name :: dump file to read
+        out_name :: extract files to this txt file
+        list_values :: return list of saved values
+        value_to_extract :: given the list of values select index to extract
+        """
         if not out_name:
             out_name = file_name
+            
         if file_name == '':
           file_name = f'{self.log}.ts4s'
 
@@ -236,30 +296,31 @@ class epipy:
           subprocess.run([f"ts4sdump -f {file_name} -e {value_to_extract} > {out_name}.txt"],shell=True)
         self.extracted_file = f'{out_name}.txt'
 
-    def err(self,log_file_name=False):
+    def err(self,log_file_name=None):
       """
       This function reads a log file and returns
       the SCF stdev in an array
-      ======================== INPUT
+      ======================== 
       log_file_name :: string, name of .log file
       ======================== Returns
       out_arr :: np.array() with shape (1, # steps)
       array index represents the SCF step
       """
+      from numpy import ndarray
+      
       if not log_file_name:
-        with open(f'{self.log}.log','r') as f:
+          log_file_name = f'{self.log}.log'
+      with open(f'{log_file_name}.log','r') as f:
           out_arr = []
           for line in f:
-            tmp = line.split()
-            if tmp[0][:4] == "RISM":
-              out_arr.append(float(tmp[4]))
-              #step = tmp[2]
-        f.close()
-        return np.array(out_arr)
+              tmp = line.split()
+              if tmp[0][:4] == "RISM":
+                  out_arr.append(float(tmp[4]))
+                  #step = tmp[2]
+      f.close()
+      return ndarray(out_arr)
 
     def reader(self,file_in:str,laplacian=False,file_out:str='out',dx=False):
-      from numpy import loadtxt,zeros,copy
-      from scipy.ndimage import laplace
       """
       This function takes in an uncompressed dump file txt file
       it reads the grid size and shape
@@ -276,6 +337,9 @@ class epipy:
       dx files with comments and it appears many follow their own
       format specifications
       """
+      from numpy import loadtxt,zeros,copy
+      from scipy.ndimage import laplace
+      
       grid_spacing = [self.resolution for _ in range(3)]
       #[i/j for (i,j) in zip(self.solute_box,self.grid)]
 
@@ -578,7 +642,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
 
         for val in np.round(item/self.resolution):
           ee = np.append(ee,[int(val[0]),int(val[1]),int(val[2])])
-        # need to fix this 
+
         ee[np.where(ee > max_x)] = max_x-1
         ee[np.where(ee > max_y)] = max_y-1
         ee[np.where(ee > max_z)] = max_z-1
