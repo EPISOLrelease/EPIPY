@@ -1,3 +1,5 @@
+# General Instructions for installing the EPISOL kernel 
+
 Navigate to your directory of choice and create a folder to do installation
 ```
 cd $HOME/
