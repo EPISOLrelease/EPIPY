@@ -18,12 +18,12 @@ class epipy:
       gen_idc :: bool, generate an ion-dipole-correction (IDC) enabled .solute file
       this file will be used for the remainder of the calculation
       convert :: convert solute_topology to .solute file
-      
+
       ========== IF GROMACS ====================
       - requirements: GROMACS installed and properlly sourced
       to_gro :: convert solute_structure file to .gro using pdb2gmx
       recenter :: recenter solute incenter of box using gmx -edifconf
-      
+
       """
       self.cmd_path = "" #path to eprism command
       self.grid = [] # number of grids per unit cell LxWxH
@@ -38,7 +38,7 @@ class epipy:
       self.err_tol = 1e-08
       self.dynamic_delvv = 1
       self.T = 298
-      self.log = 'episol_out.log'
+      self.log = ''#'episol_out.log'
       self.threads = threading.active_count()
       self.rism_args = str()
       self.test_args = str()
@@ -47,13 +47,29 @@ class epipy:
       self.get_eprism_path = ''.join([chr(i) for i in subprocess.check_output(['whereis eprism3d'],shell=True)[:-1]]).split()[1][:-8]
       ## initialize solute and solvent right at the begining
       # you can do this later onif you want to change files
-      self.solute(solute_structure,solute_topology,to_gro=False,gen_idc=False,convert=False,recenter=False,box_size=[10,10,10])
+      self.solute(solute_structure,solute_topology,to_gro,gen_idc,convert,recenter,box_size)
       self.solvent()
+      # here we set the default report name to the solute structure file name
+      # and the default save to output ALL values in the log, there is no reason
+      # not to do this as it is like 2 lines of text
+      self.rism(step=500,resolution=1,args=('all'))
+      self.report(out_file_name=f'{self.structure_file[:-4]}_out',args=('all'))
       ####################################################################################
       # HERE I AM MOVING THIS TO __INIT__
       ####################################################################################
     def solute(self,solute_structure,solute_topology,to_gro=False,gen_idc=False,convert=False,recenter=False,box_size=[10,10,10]):
-        """solute file (solute/top/prmtop, or a folder)"""
+        """
+        solute_structure :: .gro, .pdb or .xtc file
+        solute_topology :: .top or .solte file
+        gen_idc :: bool, generate an ion-dipole-correction (IDC) enabled .solute file
+        this file will be used for the remainder of the calculation
+        convert :: convert solute_topology to .solute file
+
+        ========== IF GROMACS ====================
+        - requirements: GROMACS installed and properlly sourced
+        to_gro :: convert solute_structure file to .gro using pdb2gmx
+        recenter :: recenter solute incenter of box using gmx -edifconf
+        """
         self.structure_file = solute_structure
         if convert:
             subprocess.run([f"gmxtop2solute -p {solute_topology} -o {solute_topology[:-4]}.solute"],shell=True)
@@ -90,7 +106,8 @@ class epipy:
 
         elif f"{self.path+self.solute_path+self.structure_file}"[-3:] == 'gro':
           self.file_type = 'gro'
-          """https://stackoverflow.com/questions/3346430/
+          """HELP FROM:
+          https://stackoverflow.com/questions/3346430/
           what-is-the-most-efficient-way-to-get-first-and-last-line-of-a-text-file/18603065#18603065"""
           import os
           with open(f"{self.path+self.solute_path+self.structure_file}", 'rb') as f:
@@ -107,7 +124,7 @@ class epipy:
         """
         Reads the solvent topology file
         =================================
-        solvent_topology :: correlation file
+        solvent_topology :: solvent correlation file
         """
         self.solvent_top = solvent_topology
         #self.rism_args += f" -p {self.path+self.solvent_path+self.solvent_top}"
@@ -146,7 +163,7 @@ class epipy:
 
         self.save_command = f' save:{args}'
 
-    def report(self,out_file_name:str='episol_out',args=('all')):
+    def report(self,out_file_name:str,args=('all')):
         """
         function specifies the name of the .log file and
         which params to write out into it
@@ -266,13 +283,13 @@ class epipy:
                 print(f"err_tol: {self.err_tol} actual: {out} ")
         except UnboundLocalError:
             with open(f'{self.log}.log','r') as rr:
-                tmp_err_hold = r.read()
-            r.close
+                tmp_err_hold = rr.read()
+            rr.close
             print("It appears your calculation has encountered an error")
             print(f"Please see the output from the log file ({self.log}.log)")
             print(tmp_err_hold)
         return
-    
+
     def dump(self,file_name='',out_name=False,list_values=False,value_to_extract=1):
         """
         Extracts the compressed .ts4s file and writes to a txt file
@@ -284,7 +301,7 @@ class epipy:
         """
         if not out_name:
             out_name = file_name
-            
+
         if file_name == '':
           file_name = f'{self.log}.ts4s'
 
@@ -300,16 +317,16 @@ class epipy:
       """
       This function reads a log file and returns
       the SCF stdev in an array
-      ======================== 
+      ========================
       log_file_name :: string, name of .log file
       ======================== Returns
       out_arr :: np.array() with shape (1, # steps)
       array index represents the SCF step
       """
-      from numpy import ndarray
-      
+      from numpy import array
+
       if not log_file_name:
-          log_file_name = f'{self.log}.log'
+          log_file_name = f'{self.log}'
       with open(f'{log_file_name}.log','r') as f:
           out_arr = []
           for line in f:
@@ -318,9 +335,10 @@ class epipy:
                   out_arr.append(float(tmp[4]))
                   #step = tmp[2]
       f.close()
-      return ndarray(out_arr)
+      #print(out_arr)
+      return array(out_arr)
 
-    def reader(self,file_in:str,laplacian=False,file_out:str='out',dx=False):
+    def reader(self,file_in:str,laplacian:bool=False,convolve:bool=False,sigma:float=1.52,file_out:str='out',dx=False):
       """
       This function takes in an uncompressed dump file txt file
       it reads the grid size and shape
@@ -338,8 +356,8 @@ class epipy:
       format specifications
       """
       from numpy import loadtxt,zeros,copy
-      from scipy.ndimage import laplace
-      
+      from scipy.ndimage import laplace,gaussian_laplace
+
       grid_spacing = [self.resolution for _ in range(3)]
       #[i/j for (i,j) in zip(self.solute_box,self.grid)]
 
@@ -355,6 +373,8 @@ class epipy:
                 cont +=1
       if laplacian and not dx:
         return laplace(shaped)
+      elif convolve and not dx:
+          return gaussian_laplace(shaped,sigma=sigma)
       elif not dx:
         return shaped
       if dx:
@@ -539,15 +559,38 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       +++++++++++++++++++++++++++++++++++++++++++
       so far selection string is limited to selection of
       grid-values around single residue names only: i.e. around 4 resname LYS
+      But we reccommend using the coordinate array input for more in-depth selections
+      :::::: in the future the selection commands will be updated ::::::
       ==================================================
       input_string : value to select and extract
-      default value is guv (atomic density)
+      - default value is guv (atomic density)
       if a selection is made value is passed to -> self.get_coords -> self.extract
       else -> self.extract
+      ==================================================
+      selection string can include the following key-words
+      any output value from 3DRISM, i.e 'guv', 'uuv' or 'coul' etc. etc.
+      around 'distance' :: select grid values around coordinates within specified distance (in Angstrom)
+      get :: get the exact grid value on the input coordinates (i.e. resname or coord_array)
+      resname :: any 3-letter cannonical residue name, upper or lower case
+      'laplace' or 'laplacian' or 'lap' or 'grad' or 'gradient' or 'del' :: return laplacian of the whole grid
+      this selection can be used in tandem with 'around' and 'get' but will always return the laplacian of the
+      original unmasked grid, and NOT the laplacian of the selection region.
+      'convolve' or 'log' or 'laplacian of gaussian' :: return the grid convolved with a laplacian of gaussian (LoG)
+      filter. Same specification as above
+      sigma :: stdev. for gaussian kernel in the LoG filter
+      ---------------------------------------------
+      ! All other strings will be ignored.
+      ! resname will override any array input
+      ---------------------------------------------
+      example selection
+      self.select_grid('LoG of guv with sigma 3 around 4 resname MOL')
+      creates laplacian of gaussian of the g(r) grid with a gaussian std. of 3,
+      then selects the region around 4 A of all atoms in the residue named 'MOL'
       """
       from types import NoneType
-      from numpy import ndarray
-
+      from numpy import ndarray,array,where,round,append,float64
+      lap_flag = False # to laplacian
+      conv_flag = False# to convolve
       if type(coord_array) == NoneType:
         coord_flag = False
       elif type(coord_array) == list:
@@ -563,7 +606,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       names = {'guv','uuv','ex','ld','coul'}
       # in the future need to add dictionary so people can
       # use more strings, e.g. select g(r) or local density -> guv, ld
-      parser = input_string.split()
+      parser = input_string.lower().split()
       #print(parser)
       item = None # this is our selection value i.e. resname
       for name in names:
@@ -571,6 +614,14 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
           val = name
           break # can only select one calculation result
 
+      if ('laplace' or 'laplacian' or 'lap' or 'grad' or 'gradient' or 'del') in parser:
+          lap_flag = True
+      if ('convolve' or 'log' or 'laplacian of gaussian') in parser:
+          conv_flag = True
+          if 'sigma' in parser:
+              sigma = float(parser[parser.index('sigma')+1])
+          else:
+              sigma = 1.52 # Water VdW radius
       if 'around' in parser:
         #print(parser.index('around'))
         dist = float(parser[parser.index('around')+1])
@@ -594,18 +645,15 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         # will override coordinate array
         # in the future it would be nice to be able to include both
         item = parser[parser.index('resname')+1].upper()
-
-
-      """ if (not coord_array) and dist:
-        # if we dont have an input array
-        # BUT we have a distance
-        item = parser[parser.index('around')+2]
-      else:
-        item = None"""
       ############## Now extract ts4s file
       self.extract_grid(f'{self.log}.ts4s',sele=val,out_name=f'{val}_{self.log}')
       # read extracted data into a numpy array
-      t_grid = self.reader(file_in=f'{val}_{self.log}.txt')#,laplacian=False,file_out='out',dx=False)
+      if lap_flag and (not conv_flag):
+          t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=True)
+      if conv_flag and (not lap_flag):
+          t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=False,convolve=True,sigma=sigma)
+      else:
+          t_grid = self.reader(file_in=f'{val}_{self.log}.txt')#,laplacian=False,file_out='out',dx=False)
       #############
 
       if (not coord_flag) and (dist):
@@ -621,31 +669,41 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         return t_grid
 
       if get_flag and (not coord_flag):
-        ee = np.array([],dtype=int)
-        max_x,max_y,max_z = np.float64(t_grid.shape)
+        ee = array([],dtype=int)
+        #max_x,max_y,max_z = np.float64(t_grid.shape)
 
-        for val in np.round(self.select_coords(self.structure_file,item)/self.resolution):
-          ee = np.append(ee,[int(val[0]),int(val[1]),int(val[2])])
+        for val in round(self.select_coords(self.structure_file,item)/self.resolution):
+          ee = append(ee,[int(val[0]),int(val[1]),int(val[2])])
 
-        ee[np.where(ee > max_x)] = max_x-1
-        ee[np.where(ee > max_y)] = max_y-1
-        ee[np.where(ee > max_z)] = max_z-1
-
+        for max_dim in float64(t_grid.shape):
+            if (ee > max_dim).any():
+                # if any of our rounded values is the grid limit
+                # then round down
+                ee[where(ee > max_dim)] = max_dim-1
+        if (ee == 0).any():
+            # if any of the returned are rounded to zero, then add one grid
+            ee[where(ee == 0)] = 1
+        # reshape to x,y,z coords
         ee = ee.reshape((int(len(ee)/3),3))
-        #x[ee]
+        #return the total array but only where we have selected
         return t_grid[ee[:,0],ee[:,1],ee[:,2]]
 
 
       if get_flag and (coord_flag):
-        ee = np.array([],dtype=int)
-        max_x,max_y,max_z = np.float64(t_grid.shape)
+        ee = array([],dtype=int)
+        #max_x,max_y,max_z = np.float64(t_grid.shape)
 
-        for val in np.round(item/self.resolution):
-          ee = np.append(ee,[int(val[0]),int(val[1]),int(val[2])])
+        for val in round(item/self.resolution):
+          ee = append(ee,[int(val[0]),int(val[1]),int(val[2])])
 
-        ee[np.where(ee > max_x)] = max_x-1
-        ee[np.where(ee > max_y)] = max_y-1
-        ee[np.where(ee > max_z)] = max_z-1
+        for max_dim in float64(t_grid.shape):
+            if (ee > max_dim).any():
+                # if any of our rounded values is the grid limit
+                # then round down
+                ee[where(ee > max_dim)] = max_dim-1
+        if (ee == 0).any():
+            # if any of the returned are rounded to zero, then add one grid
+            ee[where(ee == 0)] = 1
 
         ee = ee.reshape((int(len(ee)/3),3))
         #x[ee]
