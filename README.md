@@ -13,7 +13,12 @@ pip install episol
 ```
 epipy is contained within the episol module
 ```python
-from episol.epipy import epipy
+from episol import epipy
 ```
 > [!WARNING]
-> This is in its beta phase and the code will be continually improved
+> You must have the EPISOL kernel downloaded and installed ( see kernel_install_instrcutions.md for more)
+> 
+> In the future this will be included with pip, however currently you must do a 2-step installation
+
+> [!WARNING]
+> epipy is in its beta phase and the code will be continually improved
