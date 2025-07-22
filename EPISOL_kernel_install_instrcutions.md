@@ -26,9 +26,10 @@ wget https://github.com/EPISOLrelease/EPISOL/raw/refs/heads/main/src/kernel/rele
 tar -xzf release.tar.gz
 cd release/
 ```
-Configure using the path of your installed FFTW libraries and install :)
+Configure using the path of your installed FFTW libraries and install
 ```
 ./configure --with-fftw=$HOME/episol/fftw-3.3.8
 make
 make install
 ```
+:)
