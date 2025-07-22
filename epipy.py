@@ -70,17 +70,28 @@ class epipy:
         to_gro :: convert solute_structure file to .gro using pdb2gmx
         recenter :: recenter solute incenter of box using gmx -edifconf
         """
-        self.structure_file = solute_structure
+        #solute_structure = solute_structure.split('/')[-1] # get rid of the path
+
+        self.structure_file = solute_structure.split('/')[-1] # get rid of the path
+        self.solute_path = f'{'/'.join(solute_structure.split('/')[:-1])}/' # this is goofy
+        self.solute_top = solute_topology.split('/')[-1]
+        self.solute_top_path = f'{'/'.join(solute_topology.split('/')[:-1])}/'
+        if gen_idc:
+            convert = True
+
         if convert:
-            subprocess.run([f"gmxtop2solute -p {solute_topology} -o {solute_topology[:-4]}.solute"],shell=True)
-            self.solute_top = f"{solute_topology[:-4]}.solute"
-            print(f"converted {solute_topology} to {solute_topology[:-4]}.solute")
-            if gen_idc:
-                subprocess.run([f"{self.get_eprism_path}generate-idc.sh {solute_topology[:-4]}.solute > idc_{solute_topology[:-4]}.solute"],shell=True)
-                self.solute_top = f'idc_{solute_topology[:-4]}.solute'
-                print(f"generated idc-enabled solute file to: idc_{solute_topology[:-4]}.solute ")
-        else:
-            self.solute_top = solute_topology
+            subprocess.run([f"gmxtop2solute -p {self.solute_path+self.solute_top} -o {self.solute_top[:-4]}.solute"],shell=True)
+            print(f"converted {self.solute_top} to {self.solute_top[:-4]}.solute")
+            self.solute_top = f"{self.solute_top[:-4]}.solute"
+            """ We will reset our path since we just wrote a new fle to the current dir"""
+            self.solute_top_path = ''
+        if gen_idc:
+            #subprocess.run([f"{self.get_eprism_path}generate-idc.sh {self.solute_top[:-4]}.solute > idc_{self.solute_top[:-4]}.solute"],shell=True)
+            subprocess.run([f"generate-idc.sh {self.solute_top} > idc_{self.solute_top}"],shell=True)
+            self.solute_top = f'idc_{self.solute_top}'
+            print(f"generated idc-enabled solute file to: {self.solute_top}")
+        #else:
+        #    self.solute_top = solute_topology.split('/')[-1]
         ####################################################################################
         # GROMACS REQUIRED FOR THESE COMMANDS, may remove later on but can be handy
         ####################################################################################
@@ -110,7 +121,7 @@ class epipy:
           https://stackoverflow.com/questions/3346430/
           what-is-the-most-efficient-way-to-get-first-and-last-line-of-a-text-file/18603065#18603065"""
           import os
-          with open(f"{self.path+self.solute_path+self.structure_file}", 'rb') as f:
+          with open(f"{self.path+self.solute_path+self.structure_file}",'rb') as f:
               try:
                   f.seek(-2, os.SEEK_END)
                   while f.read(1) != b'\n':
@@ -118,15 +129,28 @@ class epipy:
               except OSError:
                   f.seek(0)
               last_line = f.readline().decode()
+          f.close()
         self.solute_box = [float(val) for val in last_line.split()]
 
-    def solvent(self,solvent_topology='tip3p-amber14.01A.gaff'):
+    def solvent(self,solvent_topology=None):
         """
         Reads the solvent topology file
         =================================
         solvent_topology :: solvent correlation file
+        -------------------------------
+        if solvent topology is set to None i.e. has no input
+        then we will select the tip3p 0.01A file from the source directory
+        of EPIPY, this way to avoid annoying paths
         """
-        self.solvent_top = solvent_topology
+        from os.path import dirname
+        from inspect import getfile
+        # here we will set the solvent topology default to search the
+        # site-packages directory. this way not as troublesome
+        if not solvent_topology:
+         self.solvent_top ='tip3p-amber14.01A.gaff'
+         self.solvent_path = f'{dirname(getfile(epipy))}/'
+        else:
+            self.solvent_top = solvent_topology
         #self.rism_args += f" -p {self.path+self.solvent_path+self.solvent_top}"
         ####################################################################################
         ####################################################################################
@@ -241,7 +265,7 @@ class epipy:
         v :: int(), verbose rating
         nt :: int(), number of threads to use
         """
-        self.rism_args += f" -f {self.path+self.solute_path+self.structure_file} -s {self.path+self.solute_path+self.solute_top}"
+        self.rism_args += f" -f {self.path+self.solute_path+self.structure_file} -s {self.path+self.solute_top_path+self.solute_top}"
         self.rism_args += f" -p {self.path+self.solvent_path+self.solvent_top}"
         self.rism_args += f" -coulomb {self.coulomb}"
         #self.rism_cmd += f' -cmd closure={self.closure} rism,step={self.rism_step}'
@@ -659,7 +683,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       if (not coord_flag) and (dist):
         # if we have a distance then that means we have a selection
         # so we select values around our coordinates of the selection item
-        coords_ = self.select_coords(self.structure_file,item)
+        coords_ = self.select_coords(f'{self.solute_path+self.structure_file}',item)
         #print(coords_)
         return self.select_around(t_grid,coords_,around=dist)
 
@@ -672,7 +696,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         ee = array([],dtype=int)
         #max_x,max_y,max_z = np.float64(t_grid.shape)
 
-        for val in round(self.select_coords(self.structure_file,item)/self.resolution):
+        for val in round(self.select_coords(f'{self.solute_path+self.structure_file}',item)/self.resolution):
           ee = append(ee,[int(val[0]),int(val[1]),int(val[2])])
 
         for max_dim in float64(t_grid.shape):
