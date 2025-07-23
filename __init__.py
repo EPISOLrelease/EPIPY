@@ -50,8 +50,10 @@ for name in names:
         print(warn_dict[name])
 outcomes = []
 if outcomes  == []:
-    print("all checks good!")
+    print("All Checks complete\nGood to go!")
 else:
     print('!!!!!!!!!!!!!!!!!!! OUTCOMES !!!!!!!!!!!!!!!!!!!')
     for val in outcomes:
         print(val) 
+
+from episol.epipy import epipy

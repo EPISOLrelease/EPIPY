@@ -70,12 +70,22 @@ class epipy:
         to_gro :: convert solute_structure file to .gro using pdb2gmx
         recenter :: recenter solute incenter of box using gmx -edifconf
         """
-        #solute_structure = solute_structure.split('/')[-1] # get rid of the path
 
+        # I wanted to get the file path without using the os package as it does NOT
+        # I REPEAT NOT work well for distributed computing so please dont hate me for
+        # what youre about to see
         self.structure_file = solute_structure.split('/')[-1] # get rid of the path
-        self.solute_path = f'{'/'.join(solute_structure.split('/')[:-1])}/' # this is goofy
+        if solute_structure.find('/') != -1:
+            self.solute_path = '/'.join(solute_structure.split('/')[:-1])+"/" # this is goofy
+        else:
+            self.solute_path = ''
+
         self.solute_top = solute_topology.split('/')[-1]
-        self.solute_top_path = f'{'/'.join(solute_topology.split('/')[:-1])}/'
+        if solute_topology.find('/') != -1:
+            self.solute_top_path = '/'.join(solute_topology.split('/')[:-1])+"/"
+        else:
+            self.solute_top_path = ''
+        # resume
         if gen_idc:
             convert = True
 
@@ -134,7 +144,11 @@ class epipy:
 
     def solvent(self,solvent_topology=None):
         """
-        Reads the solvent topology file
+        Reads the solvent topology file.
+        If no file specified, will default search
+        the site-packages dir where episol.epipy is
+        stored. this may fail as the os package sometimes
+        encounters errors
         =================================
         solvent_topology :: solvent correlation file
         -------------------------------
@@ -643,9 +657,9 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       if ('convolve' or 'log' or 'laplacian of gaussian') in parser:
           conv_flag = True
           if 'sigma' in parser:
-              sigma = float(parser[parser.index('sigma')+1])
+              sigma = float(parser[parser.index('sigma')+1])/self.resolution
           else:
-              sigma = 1.52 # Water VdW radius
+              sigma = 1.52/self.resolution # Water VdW radius
       if 'around' in parser:
         #print(parser.index('around'))
         dist = float(parser[parser.index('around')+1])
