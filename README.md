@@ -19,6 +19,13 @@ epipy is contained within the episol module
 ```python
 from episol import epipy
 ```
+
+The code in the tutorials will work for _essentially_ anything you throw at it
+so feel free to get creative.
+
+Google colab tutorials
+* [For protein calculation, and water placement](https://colab.research.google.com/drive/1uGGPi8CAEIJNg1_mkDwbyBzpy7WiqbnQ#offline=true&sandboxMode=true)
+
 > [!WARNING]
 > epipy is in its beta phase and the code will be continually improved
 >
