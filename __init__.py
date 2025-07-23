@@ -48,7 +48,7 @@ for name in names:
         outcomes.append(result_dict[name])
         print('!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!')
         print(warn_dict[name])
-outcomes = []
+
 if outcomes  == []:
     print("All Checks complete\nGood to go!")
 else:
