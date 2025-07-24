@@ -1,4 +1,4 @@
-This is the Python interface for episol
+# Epipy: Python interface for episol
 > [!WARNING]
 > You must have the EPISOL kernel downloaded and installed ( see kernel_install_instrcutions.md for more)
 > 
@@ -23,7 +23,7 @@ from episol import epipy
 The code in the tutorials will work for _essentially_ anything you throw at it
 so feel free to get creative.
 
-Google colab tutorials
+# Google colab tutorials
 * [Introduction tutorial and walkthrough of methane and nitrous ion](https://colab.research.google.com/drive/1EUE9_B168XrVjyvnOackqDtIH13vcLl-#offline=true&sandboxMode=true)
 * [For protein calculation, and water placement](https://colab.research.google.com/drive/1uGGPi8CAEIJNg1_mkDwbyBzpy7WiqbnQ#offline=true&sandboxMode=true)
 
