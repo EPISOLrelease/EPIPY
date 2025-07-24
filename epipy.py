@@ -376,7 +376,8 @@ class epipy:
       #print(out_arr)
       return array(out_arr)
 
-    def reader(self,file_in:str,laplacian:bool=False,convolve:bool=False,sigma:float=1.52,file_out:str='out',dx=False):
+    def reader(self,file_in:str,laplacian:bool=False,LoG:bool=False,
+    convolve:bool=False,sigma:float=1.52,file_out:str='out',dx=False):
       """
       This function takes in an uncompressed dump file txt file
       it reads the grid size and shape
@@ -394,7 +395,7 @@ class epipy:
       format specifications
       """
       from numpy import loadtxt,zeros,copy
-      from scipy.ndimage import laplace,gaussian_laplace
+      from scipy.ndimage import laplace,gaussian_laplace,gaussian_filter
 
       grid_spacing = [self.resolution for _ in range(3)]
       #[i/j for (i,j) in zip(self.solute_box,self.grid)]
@@ -412,6 +413,8 @@ class epipy:
       if laplacian and not dx:
         return laplace(shaped)
       elif convolve and not dx:
+          return gaussian_filter(shaped,sigma=sigma)
+      elif LoG and not dx:
           return gaussian_laplace(shaped,sigma=sigma)
       elif not dx:
         return shaped
@@ -624,11 +627,15 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       self.select_grid('LoG of guv with sigma 3 around 4 resname MOL')
       creates laplacian of gaussian of the g(r) grid with a gaussian std. of 3,
       then selects the region around 4 A of all atoms in the residue named 'MOL'
+      !!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!! MESSY, NEEDS SOME WORK
       """
       from types import NoneType
       from numpy import ndarray,array,where,round,append,float64
+
       lap_flag = False # to laplacian
-      conv_flag = False# to convolve
+      conv_flag = False# to convolve with LoG
+      gauss_flag = False # to convolve
+
       if type(coord_array) == NoneType:
         coord_flag = False
       elif type(coord_array) == list:
@@ -651,22 +658,37 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         if name in parser:
           val = name
           break # can only select one calculation result
-
-      if ('laplace' or 'laplacian' or 'lap' or 'grad' or 'gradient' or 'del') in parser:
+      # can override selections pretty easily
+      """if 'laplace' in parser:
           lap_flag = True
-      if ('convolve' or 'log' or 'laplacian of gaussian') in parser:
+
+      if 'log' in parser:
           conv_flag = True
-          if 'sigma' in parser:
-              sigma = float(parser[parser.index('sigma')+1])/self.resolution
-          else:
-              sigma = 1.52/self.resolution # Water VdW radius
+      if 'gaussian' or 'gauss' or 'ld' or 'convolve' in parser:
+          gauss_flag = True"""
+      #print(parser)
+      # base python does not support comparing list with or very well
+      #truth = array([name_ for name_ in parser])
+      #gauss_flag = (truth.any() == array(['gaussian' ,'gauss' , 'ld' , 'convolve']).any())
+      #lap_flag = (truth.any() == array(['laplacian' , 'lap' , 'del' , 'grad' , 'gradient']).any())
+      #conv_flag = (truth.any() == 'log')
+      gauss_flag = any(name == tru for tru in ['gaussian' ,'gauss' , 'ld' , 'convolve'] for name in parser )
+      lap_flag = any(name == tru for tru in ['laplacian' , 'lap' , 'del' , 'grad' , 'gradient'] for name in parser )
+      conv_flag = any(name == 'log' for name in parser)
+      #print(conv_flag,lap_flag,gauss_flag)
+      #####################
+      if 'sigma' in parser:
+          sigma = float(parser[parser.index('sigma')+1])/self.resolution
+      else:
+          sigma = 1.52# Water VdW
+      #####################
       if 'around' in parser:
         #print(parser.index('around'))
         dist = float(parser[parser.index('around')+1])
       else:
         dist = None
       # if no distance is specified then select everything
-
+      #####################
       if 'get' in parser:
         get_flag = True
         #item = parser[parser.index('resname')+1].upper()
@@ -683,13 +705,18 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         # will override coordinate array
         # in the future it would be nice to be able to include both
         item = parser[parser.index('resname')+1].upper()
+
       ############## Now extract ts4s file
       self.extract_grid(f'{self.log}.ts4s',sele=val,out_name=f'{val}_{self.log}')
       # read extracted data into a numpy array
-      if lap_flag and (not conv_flag):
+      if lap_flag:
           t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=True)
-      if conv_flag and (not lap_flag):
-          t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=False,convolve=True,sigma=sigma)
+      elif conv_flag:
+          t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=False,convolve=False,
+          LoG=True,sigma=sigma)
+      elif gauss_flag:
+          t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=False,LoG=False,
+          convolve=True,sigma=sigma)
       else:
           t_grid = self.reader(file_in=f'{val}_{self.log}.txt')#,laplacian=False,file_out='out',dx=False)
       #############
