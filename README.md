@@ -26,6 +26,7 @@ so feel free to get creative.
 # Google colab tutorials
 * [Introduction tutorial and walkthrough of methane and nitrous ion](https://colab.research.google.com/drive/1EUE9_B168XrVjyvnOackqDtIH13vcLl-#offline=true&sandboxMode=true)
 * [For protein calculation, and water placement](https://colab.research.google.com/drive/1uGGPi8CAEIJNg1_mkDwbyBzpy7WiqbnQ#offline=true&sandboxMode=true)
+* [For high throughput small molecule generation and solvation free energy calculation](https://colab.research.google.com/drive/175uh_Fh0YWnoxpCPDr3Qav_mQCQ0YT0Z#offline=true&sandboxMode=true)
 
   
 > [!WARNING]
