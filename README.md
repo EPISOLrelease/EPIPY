@@ -1,6 +1,6 @@
 # Epipy: Python interface for episol
 > [!WARNING]
-> You must have the EPISOL kernel downloaded and installed ( see [kernel_install_instrcutions.md](docs/kernel_install_instrcutions.md) for more)
+> You must have the EPISOL kernel downloaded and installed ( see [kernel_install_instrcutions.md](./kernel_install_instrcutions.md) for more)
 > 
 > In the future this will be included with pip, however currently you must do a 2-step installation
 
