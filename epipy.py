@@ -452,7 +452,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         # you can overide the grid spacing if need be
         grid_spacing = self.resolution
       if not filename:
-        filename = f'{self.log}.txt'
+        filename = f'guv_{self.log}.txt'
 
       xs,ys,zs = np.loadtxt(filename)[-1][:3]
       x = np.loadtxt(filename,usecols=(3))
@@ -631,7 +631,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       """
       from types import NoneType
       from numpy import ndarray,array,where,round,append,float64
-
+      from os.path import exists
       lap_flag = False # to laplacian
       conv_flag = False# to convolve with LoG
       gauss_flag = False # to convolve
@@ -673,7 +673,7 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
       #lap_flag = (truth.any() == array(['laplacian' , 'lap' , 'del' , 'grad' , 'gradient']).any())
       #conv_flag = (truth.any() == 'log')
       gauss_flag = any(name == tru for tru in ['gaussian' ,'gauss' , 'ld' , 'convolve'] for name in parser )
-      lap_flag = any(name == tru for tru in ['laplacian' , 'lap' , 'del' , 'grad' , 'gradient'] for name in parser )
+      lap_flag = any(name == tru for tru in ['laplacian','laplace' , 'lap' , 'del' , 'grad' , 'gradient'] for name in parser )
       conv_flag = any(name == 'log' for name in parser)
       #print(conv_flag,lap_flag,gauss_flag)
       #####################
@@ -707,7 +707,9 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         item = parser[parser.index('resname')+1].upper()
 
       ############## Now extract ts4s file
-      self.extract_grid(f'{self.log}.ts4s',sele=val,out_name=f'{val}_{self.log}')
+      if not exists(f'{val}_{self.log}'):
+          self.extract_grid(f'{self.log}.ts4s',sele=val,out_name=f'{val}_{self.log}')
+          # if the file is already extracted then continue
       # read extracted data into a numpy array
       if lap_flag:
           t_grid = self.reader(file_in=f'{val}_{self.log}.txt',laplacian=True)
@@ -777,3 +779,108 @@ object 3 class array type double rank 0 items {int(xs*ys*zs)} follows\n""")
         # if we have a distance and coord_array then we
         # return the grid selected around the coord_array
         return self.select_around(t_grid,item,around=dist)
+    @staticmethod
+    def UC(closure):
+      """
+      Function to get universal correction (UC) based on the closure
+      used for RISM calculation.
+      ----------------------------
+      function returns a dictionaryy containing both the FEP and
+      experimental correction constants 'A' and 'B' in the equation:
+      \delta G^{solv} = \mu^{ex}+'A'*V_m+'B', where V_m is partial molar volume
+      from the free energy universal correction proposed by:
+      David S Palmer, Andrey I Frolov, Ekaterina L Ratkova and Maxim V Fedorov
+      http://dx.doi.org/10.1088/0953-8984/22/49/492101
+      """
+      # i got bored of writing conditionals and match looks cooler
+      match closure:
+        case "KH":
+           return {"FEP":[-647.348453608648,4.8547480416612],
+                   "EXP":[-619.952559990907,-1.47859772642391]}
+        case "KGK":
+           return {"FEP":[-462.53443482818,8.04130525293397],
+                   "EXP":[-435.780764679989,1.67322083808028]}
+        case "PSE2":
+           return {"FEP":[-687.908213741747,3.5610101387673],
+                   "EXP":[-657.653298424423,-2.65897745235407]}
+        case "PSE3":
+           return {"FEP":[-702.709116407626,3.75516272446305],
+                   "EXP":[-671.598836677146,-2.44628209193456]}
+        case "PSE4":
+           return {"FEP":[-710.201646298877,4.17184421269326],
+                   "EXP":[-684.990022127642,-1.17317388291133]}
+        case "PSE5":
+           return {"FEP":[-714.134748976177,4.40755095859481],
+                   "EXP":[-692.678698950017,-0.430203751105637]} # fitted at alpha=3
+        case "PLHNC":
+           return {"FEP":[-710.548315106323,4.20537805720096],
+                   "EXP":[-678.964891475467,-2.0042752246319]}  # fitted at alpha=3
+        case "HNC":
+          return {"FEP":[-710.548315106323,4.20537805720096],
+                  "EXP":[-678.964891475467,-2.0042752246319]}  # HNC is simply copied from PLHNC
+    def free_energy(cls,conv:str='kj/mol',fit_value:str='EXP'):
+        """
+        Return the free energy of the most recent calculation according to the
+        3DRISM object
+        ====================
+        fit_value: string, energy value to return
+        options:
+        EXP : experimental fitting
+        FEP : free energy of pertubation fitting
+        ====================
+        conv: sting expression
+        default output unit is in !!!! in KJ/mol !!!!
+        can specify what units you want to convert to
+        by specifying the expression. Function will return
+        the value based on original unit convversion
+        e.g
+        "kcal" resolves to taking original free energy value
+        in Kj/mol and multipying it by (1/Kj)*(2kcal)*1mol to convert
+        to kcal
+        ----------- keyword Options: -----------
+        kcal, mol , kj, j , joule
+        --------- all other standard math symbols allowed -----------
+
+        ====================
+        returns:
+        float: free energy of solvation default !!!! in KJ/mol !!!!
+        \delta G^{solv} = \mu^{ex}+'A'*V_m+'B', where V_m is partial molar volume
+        """
+        ################# Parse the conversion string #################
+        def parse_units(G_solv,to_eval_:str='kj/mol'):
+            if not to_eval_:
+                return G_solv
+            to_eval_ = to_eval_.lower()
+            kcal = (0.239006/1.000001104) #KJ to kcal
+            joule =j = 1000 #
+            mol = 6.022e23 #
+            kj = kilojoule = 1
+            #to_eval_ = 'y*KJ'.lower() #
+            if to_eval_ == 'kj/mol':
+                return G_solv
+
+            if to_eval_.find('mol') == -1:
+                # no mol specified so convert
+                G_solv = G_solv*(mol)
+                return eval(str(G_solv)+'*'+'('+to_eval_+')')
+            elif to_eval_.find('/mol') != -1:
+                mol = 1# due to default  #6.022e23
+                return eval(str(G_solv)+'*'+'('+to_eval_+')')
+            elif to_eval_.find('*mol') != -1:
+                mol = 6.022e23**2# due to default  #6.022e23
+                return eval(str(G_solv)+'*'+'('+to_eval_+')')
+        ################# ################# ################# #################
+        cc = cls.closure
+        #assert fit_value == ("EXP" or "FEP"), "you must choose EXP or FEP"
+        A,B = cls.UC(cc)[fit_value]
+
+        with open(f'{cls.log}.log','r') as rr:
+            for line in rr:
+                t = line.split()
+                if t[0] == 'total':
+                    #out_energies.append(float(t[10])+float(t[8])*A+B)
+                    mu_ex = float(t[10])
+                    V_m = float(t[8])
+                    break
+        rr.close()
+        return parse_units(G_solv=mu_ex+V_m*A+B,to_eval_=conv)
