@@ -1,4 +1,7 @@
 # Epipy: Python interface for episol
+> Citation: "A Python Tutorial for 3DRISM Solvation Calculations of Chemical and Biological Molecules", Swanson, P., Cao, S., Huang, X, https://chemrxiv.org/engage/chemrxiv/article-details/68a6903c728bf9025e6c91ed
+
+
 > [!WARNING]
 > You must have the EPISOL kernel downloaded and installed ( see [kernel install instrcutions](./EPISOL_kernel_install_instrcutions.md) for more)
 > 
