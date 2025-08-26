@@ -3,7 +3,7 @@
 >1. "A Python Tutorial for 3DRISM Solvation Calculations of Chemical and Biological Molecules", Swanson, P., Cao, S., Huang, X, https://chemrxiv.org/engage/chemrxiv/article-details/68a6903c728bf9025e6c91ed
 >2. “EPISOL: A Software Package with Expanded Functions to Perform 3D-RISM Calculations for the Solvation of Chemical and Biological Molecules“, Cao, S.; Kalin, M.L.; Huang, X., J. Comput. Chem., 44, 1536-1549, (2023)
 
->[!Description]
+> [!Abstract]
 The 3-Dimensional Reference Interaction Site Model (3DRISM) provides a powerful grid-based solvation model for chemical and biological solutes, which balances the calculation accuracy and efficiency. We previously developed EPISOL (Expanded Package of Integral Equation Theory-Based Solvation) to enable efficient 3DRISM calculations. EPISOL implements 22 different closures and several variations of 3DRISM. EPISOL is compatible with both AMBER and GROMACS simulation packages. The original EPISOL was written in C++ and includes a kernel library that allows integration of EPISOL routines into other software. In this work, we introduce EPIPY, a Python-based package that leverages the EPISOL kernel library to streamline 3DRISM calculations. We first provide an overview of 3DRISM, then present a step-by-step tutorial on running and analyzing 3DRISM calculations using EPIPY. Our tutorial examples demonstrate how to generate water distributions around chemical compounds and ions, identify the most probable water coordinates near a protein, and compute the solvation free energies of small organic molecules. 
 
 
