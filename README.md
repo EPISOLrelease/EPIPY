@@ -33,9 +33,16 @@ The code in the tutorials will work for _essentially_ anything you throw at it
 so feel free to get creative.
 
 # Google colab tutorials
-* [Introduction tutorial and walkthrough of methane and nitrous ion](https://colab.research.google.com/drive/1EUE9_B168XrVjyvnOackqDtIH13vcLl-#offline=true&sandboxMode=true)
-* [For protein calculation, and water placement](https://colab.research.google.com/drive/1uGGPi8CAEIJNg1_mkDwbyBzpy7WiqbnQ#offline=true&sandboxMode=true)
-* [For high throughput small molecule generation and solvation free energy calculation](https://colab.research.google.com/drive/175uh_Fh0YWnoxpCPDr3Qav_mQCQ0YT0Z#offline=true&sandboxMode=true)
+In addition to the EPISOL kernel library, EPIPY tutorials require downloading and installing a few additional packages (e.g., openmm, pdbfixer, parmed, mdanalysis, py3dmol, rdkit, openff-toolkit), primarily for generating topology files as input to EPISOL. Therefore, the most convenient way to run our tutorials is through Google Colab. We have created Colab tutorial files for each example:
+
+* Introduction tutorial and walkthrough of methane and nitrous ion
+  https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_methane_and_nitrous_tutorial_release.ipynb
+  
+* Protein calculation, and water placement
+  https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_protein_and_water_placement_release.ipynb
+
+* High throughput small molecule generation and solvation free energy calculation
+  https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_small_molecule_high_throughput_release.ipynb
 
   
 > [!WARNING]
