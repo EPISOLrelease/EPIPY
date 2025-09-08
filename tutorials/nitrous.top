@@ -1,0 +1,50 @@
+[ defaults ]
+; nbfunc	comb-rule	gen-pairs	fudgeLJ	fudgeQQ
+     1	     2	yes   	0.500000	0.833333
+
+[ atomtypes ]
+;type, bondingtype, atomic_number, mass, charge, ptype, sigma, epsilon
+NO2_0      	     7	14.00672	0.0000000000000000	A    	0.3206876023663901	0.7016212989374017
+NO2_1      	     8	15.99943	0.0000000000000000	A    	0.3039812205065809	0.8795023257036865
+NO2_2      	     8	15.99943	0.0000000000000000	A    	0.3039812205065809	0.8795023257036865
+
+[ moleculetype ]
+NO2	         3
+
+[ atoms ]
+;index, atom type, resnum, resname, name, cgnr, charge, mass
+     1 NO2_0        1 NO2      N          1      0.087400000000     14.006720000000
+     2 NO2_1        1 NO2      O          1     -0.543700000000     15.999430000000
+     3 NO2_2        1 NO2      O          1     -0.543700000000     15.999430000000
+
+[ pairs ]
+;ai    aj   funct
+
+[ bonds ]
+;ai    aj   funct r k
+     1      2      1      0.123267923610  311627.285614513967 
+     1      3      1      0.123267923610  311627.285614513967 
+
+[ angles ]
+;ai    aj   ak   funct theta  k
+     2      1      3      1     112.871400968100     460.899611617895 
+
+[ dihedrals ]
+;ai    aj   ak   al   funct phi  k
+
+[ settles ]
+;i  funct   dOH  dHH
+
+
+[ exclusions ]
+;ai    aj
+
+
+[ system ]
+;name
+FOO
+
+[ molecules ]
+;name	number
+NO2	1
+
