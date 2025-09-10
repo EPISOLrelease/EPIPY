@@ -1,1 +1,10 @@
 This folder contains Google Colab tutorials.
+
+There are two types of colab notebooks.
+
+[1] Those that require no third party software (with prefix 'plain')
+[2] Those that do 
+
+For example the protein and water placement notebook allows you to download ANY pdb, generate toplogoies (using openMM) 
+however, its plain counterpart does not contain any topology generating functions.
+
