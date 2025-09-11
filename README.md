@@ -33,7 +33,7 @@ The code in the tutorials will work for _essentially_ anything you throw at it
 so feel free to get creative.
 
 # Google colab tutorials
-In addition to the EPISOL kernel library, EPIPY tutorials require downloading and installing a few additional packages (e.g., openmm, pdbfixer, parmed, mdanalysis, py3dmol, rdkit, openff-toolkit), primarily for generating topology files as input to EPISOL. Therefore, the most convenient way to run our tutorials is through Google Colab. We have created Colab tutorial files for each example:
+We have created several jupyter notebook tutorials exhibiting some of the many tools available in EPIPY. The tutorials come in several flavors, notebooks with topology file generating capabilities, those which use pre-written topologies (and require no 3rd party packages), and those for offline non-colab use. The notebooks with topology generating capabilites will work for essentailly any system and we recomend the users to upload their own molcules/proteins. However, for the 'plain' tutorials we use pre-crafted PDBs and topology files, these tutorials are found [here](./Colab_tutorials). The tutorials with topology generating capabilities are found:
 
 * Introduction tutorial and walkthrough of methane and nitrous ion
   https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_methane_and_nitrous_tutorial_release.ipynb
@@ -44,6 +44,7 @@ In addition to the EPISOL kernel library, EPIPY tutorials require downloading an
 * High throughput small molecule generation and solvation free energy calculation
   https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_small_molecule_high_throughput_release.ipynb
 
+Notebooks for local use (and their corresponding environment.yml file) are found in the [tutorial folder](./tutorials). 
   
 > [!WARNING]
 > epipy is in its beta phase and the code will be continually improved
