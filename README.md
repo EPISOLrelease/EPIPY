@@ -30,13 +30,12 @@ epipy is contained within the episol module
 from episol import epipy
 ```
 ---
-The code in the tutorials will work for _essentially_ anything you throw at it
-so feel free to get creative.
 
 # tutorials
 We have created several jupyter notebook tutorials exhibiting some of the many tools available in EPIPY. The tutorials come in several flavors, notebooks with topology file generating capabilities, those which use pre-written topologies (and require no 3rd party packages), and those for offline non-colab use. The notebooks with topology generating capabilites will work for essentailly any system and we recomend the users to upload their own molcules/proteins. 
 
 ## Google colab - with topology generation  
+Contains third-party packages to generate topologies. This will work for _essentially_ anything you throw at it so feel free to get creative.
 * Introduction tutorial and walkthrough of methane and nitrous ion [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_methane_and_nitrous_tutorial_release.ipynb)
   
 * Protein calculation, and water placement [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/episol_protein_and_water_placement_release.ipynb)
@@ -45,11 +44,11 @@ We have created several jupyter notebook tutorials exhibiting some of the many t
 
 
 ## Google colab - no external packages (aside from epipy) 
-for the 'plain' tutorials we use pre-crafted PDBs and topology files, these tutorials are found [here](./Colab_tutorials).
+for the 'plain' tutorials we use pre-crafted PDBs and topology files.
 
-* Introduction tutorial and walkthrough of methane and nitrous ion [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/plain_episol_methane_and_nitrous_tutorial.ipynb)
+* Introduction tutorial and walkthrough of methane and nitrous ion [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/plain_methane_and_nitrous_tutorial_notebook.ipynb)
   
-* Protein calculation, and water placement [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/plain_episol_protein_and_water_placement.ipynb)
+* Protein calculation, and water placement [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/plain_protein_and_water_placement_notebook.ipynb)
 
 * High throughput small molecule generation and solvation free energy calculation  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EPISOLrelease/EPIPY/blob/main/Colab_tutorials/plain_episol_small_molecule_high_throughput.ipynb)
 
