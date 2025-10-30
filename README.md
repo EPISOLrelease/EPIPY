@@ -1,4 +1,9 @@
 # Epipy: A Python Package for 3DRISM Solvation Calculations of Chemical and Biological Molecules
+## Website
+
+For more documentation see the website! [here](https://epipy.readthedocs.io/en/latest/)
+
+
 >Please citate the following papers for Epipy:
 >1. "A Python Tutorial for 3DRISM Solvation Calculations of Chemical and Biological Molecules", Swanson, P., Cao, S., Huang, X, https://chemrxiv.org/engage/chemrxiv/article-details/68a6903c728bf9025e6c91ed
 >2. “EPISOL: A Software Package with Expanded Functions to Perform 3D-RISM Calculations for the Solvation of Chemical and Biological Molecules“, Cao, S.; Kalin, M.L.; Huang, X., J. Comput. Chem., 44, 1536-1549, (2023)
